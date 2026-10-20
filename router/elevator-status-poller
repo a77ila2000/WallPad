@@ -1,0 +1,182 @@
+#!/bin/sh
+
+# Keep the COMMAX elevator status feed alive without opening the wallpad page.
+# This service sends only the captured read-only getEvStatus request.  It never
+# sends setEvStatus or any elevator call command.
+
+set -eu
+
+[ ! -r /etc/elevator.env ] || . /etc/elevator.env
+
+IFACE="${ELEVATOR_IFACE:-br-homenet}"
+SERVER_IP="${ELEVATOR_SERVER_IP:?set ELEVATOR_SERVER_IP}"
+SERVER_PORT="${ELEVATOR_SERVER_PORT:-29715}"
+WALLPAD_IP="${ELEVATOR_WALLPAD_IP:?set ELEVATOR_WALLPAD_IP}"
+PORT_FIRST="${ELEVATOR_PORT_FIRST:-21000}"
+PORT_LAST="${ELEVATOR_PORT_LAST:-21999}"
+CALL_PORT_LAST="${ELEVATOR_CALL_PORT_LAST:-22099}"
+IDLE_POLL_SECONDS="${ELEVATOR_IDLE_POLL_SECONDS:-4}"
+MOVING_POLL_SECONDS="${ELEVATOR_MOVING_POLL_SECONDS:-1}"
+REQUEST="${ELEVATOR_REQUEST:-/usr/share/elevator/getEvStatus-request.bin}"
+STATE_DIR="${ELEVATOR_POLLER_STATE:-/tmp/elevator-status-poller}"
+NFT_TABLE=elevator_status_poller
+ROUTER_MAC=
+ARP_ORIGINAL_FILE="$STATE_DIR/original-arp-ignore"
+LAST_SUCCESS_FILE="$STATE_DIR/last-success-epoch.txt"
+
+OLD_ARP_IGNORE=
+ADDR_ADDED=0
+consecutive_failures=0
+
+write_health() {
+    ok="$1"
+    port="$2"
+    bytes="$3"
+    detail="$4"
+    direction="$5"
+    now="$(date +%s)"
+    iso="$(date -Iseconds)"
+    tmp="$STATE_DIR/health.json.tmp"
+    last_success=0
+    [ -r "$LAST_SUCCESS_FILE" ] && last_success="$(cat "$LAST_SUCCESS_FILE")"
+    printf '%s\n' "$port" >"$STATE_DIR/last-port.txt.tmp"
+    mv "$STATE_DIR/last-port.txt.tmp" "$STATE_DIR/last-port.txt"
+    printf '{"running":true,"lastAttemptEpoch":%s,"lastAttempt":"%s","lastOk":%s,"lastSuccessEpoch":%s,"consecutiveFailures":%s,"sourcePort":%s,"responseBytes":%s,"direction":%s,"detail":"%s"}\n' \
+        "$now" "$iso" "$ok" "$last_success" "$consecutive_failures" "$port" "$bytes" "$direction" "$detail" >"$tmp"
+    mv "$tmp" "$STATE_DIR/health.json"
+}
+
+install_nft_table() {
+    nft delete table bridge "$NFT_TABLE" >/dev/null 2>&1 || true
+    nft -f - <<EOF
+table bridge $NFT_TABLE {
+  chain prerouting {
+    type filter hook prerouting priority -300; policy accept;
+    ip saddr $SERVER_IP ip daddr $WALLPAD_IP tcp sport $SERVER_PORT tcp dport $PORT_FIRST-$CALL_PORT_LAST counter ether daddr set $ROUTER_MAC meta pkttype set host
+  }
+}
+EOF
+    nft -a list table bridge "$NFT_TABLE" >"$STATE_DIR/nft.txt"
+}
+
+ensure_runtime() {
+    ip link show "$IFACE" >/dev/null 2>&1 || return 1
+    ip route get "$SERVER_IP" | grep -q "dev $IFACE" || return 1
+    if ! ip -4 -o addr show dev "$IFACE" | grep -q " $WALLPAD_IP/32 .*scope host"; then
+        ip addr add "$WALLPAD_IP/32" scope host dev "$IFACE" || return 1
+        ADDR_ADDED=1
+    fi
+    sysctl -w "net.ipv4.conf.$IFACE.arp_ignore=3" >/dev/null || return 1
+    if ! nft list table bridge "$NFT_TABLE" >/dev/null 2>&1; then
+        install_nft_table || return 1
+    fi
+}
+
+cleanup() {
+    trap - EXIT INT TERM
+    nft delete table bridge "$NFT_TABLE" >/dev/null 2>&1 || true
+    if [ "$ADDR_ADDED" = 1 ]; then
+        ip addr del "$WALLPAD_IP/32" dev "$IFACE" >/dev/null 2>&1 || true
+    fi
+    if [ -n "$OLD_ARP_IGNORE" ]; then
+        sysctl -w "net.ipv4.conf.$IFACE.arp_ignore=$OLD_ARP_IGNORE" >/dev/null 2>&1 || true
+        rm -f "$ARP_ORIGINAL_FILE"
+    fi
+    mkdir -p "$STATE_DIR"
+    printf '{"running":false,"stoppedEpoch":%s}\n' "$(date +%s)" >"$STATE_DIR/health.json"
+}
+stop_service() {
+    cleanup
+    exit 0
+}
+trap cleanup EXIT
+trap stop_service INT TERM
+
+test -s "$REQUEST"
+ip link show "$IFACE" >/dev/null
+ip route get "$SERVER_IP" | grep -q "dev $IFACE"
+ROUTER_MAC="$(cat "/sys/class/net/$IFACE/address")"
+
+mkdir -p "$STATE_DIR"
+chmod 700 "$STATE_DIR"
+
+if ip -4 -o addr show dev "$IFACE" | grep -q " $WALLPAD_IP/32 .*scope host"; then
+    # A SIGKILL or network restart can leave the synthetic scope-host address
+    # behind. It belongs only to this service, so remove and recreate it.
+    ip addr del "$WALLPAD_IP/32" dev "$IFACE" >/dev/null 2>&1 || true
+elif ip -4 -o addr show dev "$IFACE" | grep -q " $WALLPAD_IP/"; then
+    echo "refusing to start: non-service address $WALLPAD_IP is assigned on $IFACE" >&2
+    exit 2
+fi
+
+if [ ! -r "$ARP_ORIGINAL_FILE" ]; then
+    cat "/proc/sys/net/ipv4/conf/$IFACE/arp_ignore" >"$ARP_ORIGINAL_FILE"
+fi
+OLD_ARP_IGNORE="$(cat "$ARP_ORIGINAL_FILE")"
+# arp_ignore=3 suppresses ARP only for the scope-host duplicate address.  The
+# The router's normal home-network address remains reachable.
+sysctl -w "net.ipv4.conf.$IFACE.arp_ignore=3" >/dev/null
+ip addr add "$WALLPAD_IP/32" scope host dev "$IFACE"
+ADDR_ADDED=1
+
+install_nft_table
+
+ip route get "$SERVER_IP" from "$WALLPAD_IP" >"$STATE_DIR/route.txt"
+
+port="$PORT_FIRST"
+if [ -r "$STATE_DIR/last-port.txt" ]; then
+    last_port="$(cat "$STATE_DIR/last-port.txt")"
+    case "$last_port" in
+        ''|*[!0-9]*) ;;
+        *)
+            if [ "$last_port" -ge "$PORT_FIRST" ] && [ "$last_port" -le "$PORT_LAST" ]; then
+                port=$((last_port + 1))
+                [ "$port" -le "$PORT_LAST" ] || port="$PORT_FIRST"
+            fi
+            ;;
+    esac
+fi
+next_sleep="$IDLE_POLL_SECONDS"
+while true; do
+    ensure_runtime || exit 3
+    response="$STATE_DIR/response-$port.tmp"
+    log="$STATE_DIR/socat-$port.tmp"
+    set +e
+    socat -T 4 -t 4 STDIO \
+        TCP4:"$SERVER_IP":"$SERVER_PORT",bind="$WALLPAD_IP",sourceport="$port",connect-timeout=2 \
+        <"$REQUEST" >"$response" 2>"$log"
+    rc=$?
+    set -e
+    bytes="$(wc -c <"$response" | tr -d ' ')"
+
+    if [ "$rc" -eq 0 ] && grep -q '^HTTP/1.1 200 OK' "$response" && grep -q '<ns:getEvStatusResponse>' "$response"; then
+        consecutive_failures=0
+        date +%s >"$LAST_SUCCESS_FILE.tmp"
+        mv "$LAST_SUCCESS_FILE.tmp" "$LAST_SUCCESS_FILE"
+        direction="$(sed -n 's:.*<carDirection>\([^<]*\)</carDirection>.*:\1:p' "$response")"
+        case "$direction" in
+            1|2) next_sleep="$MOVING_POLL_SECONDS" ;;
+            *) direction=0; next_sleep="$IDLE_POLL_SECONDS" ;;
+        esac
+        mv "$response" "$STATE_DIR/last-response.bin"
+        : >"$STATE_DIR/last-error.log"
+        write_health true "$port" "$bytes" ok "$direction"
+    else
+        consecutive_failures=$((consecutive_failures + 1))
+        mv "$log" "$STATE_DIR/last-error.log"
+        rm -f "$response"
+        next_sleep="$IDLE_POLL_SECONDS"
+        write_health false "$port" "$bytes" "socat-$rc" -1
+        if [ "$consecutive_failures" -ge 3 ]; then
+            # Rebuild only the synthetic response-capture path. Native wallpad
+            # traffic and all unrelated bridge rules remain untouched.
+            install_nft_table
+            ip neigh flush to "$SERVER_IP" dev "$IFACE" >/dev/null 2>&1 || true
+        fi
+    fi
+    rm -f "$log"
+
+    port=$((port + 1))
+    [ "$port" -le "$PORT_LAST" ] || port="$PORT_FIRST"
+    sleep "$next_sleep"
+done

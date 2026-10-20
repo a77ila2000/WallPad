@@ -1,0 +1,8 @@
+#!/bin/sh
+
+mask_path="/sys/class/net/br-homenet/bridge/group_fwd_mask"
+
+if [ -e "$mask_path" ]; then
+	echo 8 > "$mask_path"
+	logger -t homenet-group-forward "hotplug group_fwd_mask=$(cat "$mask_path") action=${ACTION:-unknown} interface=${INTERFACE:-unknown} device=${DEVICE:-unknown}"
+fi

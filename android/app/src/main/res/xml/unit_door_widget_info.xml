@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/unit_door_widget_description"
+    android:initialLayout="@layout/unit_door_widget" android:previewLayout="@layout/unit_door_widget"
+    android:minWidth="110dp" android:minHeight="56dp"
+    android:targetCellWidth="2" android:targetCellHeight="1"
+    android:resizeMode="horizontal" android:updatePeriodMillis="0" android:widgetCategory="home_screen" />

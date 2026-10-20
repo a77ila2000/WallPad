@@ -1,0 +1,13 @@
+{
+  "sessionPath": "REPLACE_LOCALLY",
+  "stateDir": "REPLACE_LOCALLY",
+  "listenHost": "REPLACE_LOCALLY",
+  "listenPort": 18991,
+  "bearerTokenPath": "REPLACE_LOCALLY",
+  "doorPinPath": "REPLACE_LOCALLY",
+  "allowedLobbies": [
+    "REPLACE_LOCALLY",
+    "REPLACE_LOCALLY",
+    "REPLACE_LOCALLY"
+  ]
+}

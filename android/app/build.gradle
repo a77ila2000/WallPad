@@ -1,0 +1,49 @@
+plugins {
+    id "com.android.application"
+}
+
+def defaultServer = System.getenv("HOMEPAD_SERVER_URL") ?: ""
+def defaultToken = System.getenv("HOMEPAD_API_TOKEN") ?: ""
+def parkingVisitorName = System.getenv("HOMEPAD_PARKING_VISITOR_NAME") ?: ""
+def parkingPhone = System.getenv("HOMEPAD_PARKING_PHONE") ?: ""
+def cctvOrigin = System.getenv("HOMEPAD_CCTV_ORIGIN") ?: ""
+def quoted = { value -> '"' + value.replace('\\', '\\\\').replace('"', '\\"') + '"' }
+
+android {
+    namespace "com.homepad.companion"
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.homepad.companion"
+        minSdk 26
+        targetSdk 35
+        versionCode 88
+        versionName "0.1.87"
+        testInstrumentationRunner "com.homepad.companion.SpeakerphoneRouteProbe"
+        buildConfigField "String", "DEFAULT_SERVER_URL", quoted(defaultServer)
+        buildConfigField "String", "DEFAULT_API_TOKEN", quoted(defaultToken)
+        buildConfigField "String", "PARKING_VISITOR_NAME", quoted(parkingVisitorName)
+        buildConfigField "String", "PARKING_PHONE", quoted(parkingPhone)
+        buildConfigField "String", "CCTV_ORIGIN", quoted(cctvOrigin)
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    buildTypes {
+        debug {
+            applicationIdSuffix ".debug"
+            versionNameSuffix "-debug"
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

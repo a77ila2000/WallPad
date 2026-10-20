@@ -1,0 +1,220 @@
+{
+  "ew11": {
+    "host": "REPLACE_LOCALLY",
+    "port": 18899,
+    "reconnectSeconds": 2,
+    "busIdleMs": 150
+  },
+  "http": {
+    "host": "127.0.0.1",
+    "port": 8090,
+    "apiToken": "REPLACE_LOCALLY"
+  },
+  "integration": {
+    "policy": "REPLACE_LOCALLY",
+    "priority": [
+      "REPLACE_LOCALLY",
+      "REPLACE_LOCALLY"
+    ]
+  },
+  "officialCommax": {
+    "enabled": false,
+    "controlEnabled": true,
+    "statePollingEnabled": true,
+    "pollSeconds": 5,
+    "sessionPath": "REPLACE_LOCALLY",
+    "timeoutSeconds": 10,
+    "lightNames": {
+      "1": "REPLACE_LOCALLY",
+      "2": "REPLACE_LOCALLY",
+      "3": "REPLACE_LOCALLY",
+      "4": "REPLACE_LOCALLY",
+      "5": "REPLACE_LOCALLY"
+    },
+    "heatingNames": {
+      "1": "REPLACE_LOCALLY",
+      "2": "REPLACE_LOCALLY",
+      "3": "REPLACE_LOCALLY",
+      "4": "REPLACE_LOCALLY"
+    },
+    "batchNickname": "REPLACE_LOCALLY",
+    "ventilationNickname": "REPLACE_LOCALLY",
+    "elevatorCallEnabled": false
+  },
+  "cctv": {
+    "enabled": false,
+    "host": "REPLACE_LOCALLY",
+    "streamPort": 19731,
+    "timeoutSeconds": 8,
+    "maxFrameBytes": 2097152,
+    "maxConcurrent": 2,
+    "unitDoorRequestSeconds": 12,
+    "channels": [
+      {
+        "id": 0,
+        "name": "REPLACE_LOCALLY"
+      },
+      {
+        "id": 1,
+        "name": "REPLACE_LOCALLY"
+      },
+      {
+        "id": 2,
+        "name": "REPLACE_LOCALLY"
+      },
+      {
+        "id": 3,
+        "name": "REPLACE_LOCALLY"
+      },
+      {
+        "id": 4,
+        "name": "REPLACE_LOCALLY"
+      },
+      {
+        "id": 100,
+        "name": "REPLACE_LOCALLY",
+        "source": "REPLACE_LOCALLY"
+      }
+    ]
+  },
+  "control": {
+    "enabled": false,
+    "verified": {
+      "1": [
+        "REPLACE_LOCALLY",
+        "REPLACE_LOCALLY",
+        "REPLACE_LOCALLY"
+      ],
+      "2": [
+        "REPLACE_LOCALLY",
+        "REPLACE_LOCALLY",
+        "REPLACE_LOCALLY"
+      ],
+      "3": [
+        "REPLACE_LOCALLY",
+        "REPLACE_LOCALLY",
+        "REPLACE_LOCALLY"
+      ],
+      "4": [
+        "REPLACE_LOCALLY",
+        "REPLACE_LOCALLY",
+        "REPLACE_LOCALLY"
+      ]
+    }
+  },
+  "zones": {
+    "1": "REPLACE_LOCALLY",
+    "2": "REPLACE_LOCALLY",
+    "3": "REPLACE_LOCALLY",
+    "4": "REPLACE_LOCALLY"
+  },
+  "lights": {
+    "enabled": false,
+    "maxAttempts": 3,
+    "names": {
+      "1": "REPLACE_LOCALLY",
+      "2": "REPLACE_LOCALLY",
+      "3": "REPLACE_LOCALLY",
+      "4": "REPLACE_LOCALLY",
+      "5": "REPLACE_LOCALLY"
+    },
+    "verified": {
+      "1": [
+        "REPLACE_LOCALLY",
+        "REPLACE_LOCALLY"
+      ],
+      "2": [
+        "REPLACE_LOCALLY",
+        "REPLACE_LOCALLY"
+      ],
+      "3": [
+        "REPLACE_LOCALLY",
+        "REPLACE_LOCALLY"
+      ],
+      "4": [
+        "REPLACE_LOCALLY",
+        "REPLACE_LOCALLY"
+      ],
+      "5": [
+        "REPLACE_LOCALLY",
+        "REPLACE_LOCALLY"
+      ]
+    }
+  },
+  "batchSwitch": {
+    "enabled": false,
+    "maxAttempts": 3,
+    "scope": "REPLACE_LOCALLY"
+  },
+  "elevator": {
+    "homeFloor": 1,
+    "statusUrl": "REPLACE_LOCALLY",
+    "callReceiptUrl": "REPLACE_LOCALLY",
+    "pollSeconds": 1,
+    "freshSeconds": 12,
+    "retainSeconds": 120,
+    "callEnabled": false,
+    "callCooldownSeconds": 120,
+    "realtimeWhenWallpadOff": true,
+    "callEndpointUrl": "REPLACE_LOCALLY"
+  },
+  "visitors": {
+    "enabled": false,
+    "ingestToken": "REPLACE_LOCALLY",
+    "historyPath": "REPLACE_LOCALLY",
+    "historyLimit": 50,
+    "retentionDays": 90,
+    "dedupeSeconds": 15,
+    "ringSeconds": 35,
+    "sourceLocations": {
+      "entrance_1": "REPLACE_LOCALLY",
+      "entrance_2": "REPLACE_LOCALLY",
+      "entrance_3": "REPLACE_LOCALLY"
+    },
+    "sourceDeviceIps": {
+      "entrance_1": "REPLACE_LOCALLY",
+      "entrance_2": "REPLACE_LOCALLY",
+      "entrance_3": "REPLACE_LOCALLY"
+    }
+  },
+  "aptiParking": {
+    "enabled": false,
+    "pollSeconds": 20,
+    "sessionPath": "REPLACE_LOCALLY",
+    "parkingCachePath": "REPLACE_LOCALLY",
+    "activityStatePath": "REPLACE_LOCALLY",
+    "monthlyAllowanceMinutes": 6000,
+    "timeoutSeconds": 10,
+    "visitorPhone": "REPLACE_LOCALLY"
+  },
+  "wallpadBridge": {
+    "enabled": false,
+    "audioEnabled": true,
+    "centralAudioEnabled": true,
+    "unitAudioEnabled": true,
+    "statePath": "REPLACE_LOCALLY",
+    "historyLimit": 100,
+    "vehicleAliases": {
+      "0000": "차량 이름"
+    }
+  },
+  "doorUnlock": {
+    "statePath": "REPLACE_LOCALLY",
+    "central": {
+      "enabled": false,
+      "transport": "REPLACE_LOCALLY",
+      "endpointUrl": "",
+      "bearerToken": "",
+      "timeoutSeconds": 12,
+      "verifiedLocations": []
+    },
+    "unit": {
+      "enabled": false,
+      "transport": "REPLACE_LOCALLY",
+      "endpointUrl": "",
+      "bearerToken": "",
+      "timeoutSeconds": 12,
+      "verifiedLocations": []
+    }
+  }
+}

@@ -1,0 +1,11 @@
+* text=auto
+*.sh text eol=lf
+*.cgi text eol=lf
+*.init text eol=lf
+*.hotplug text eol=lf
+router/elevator-status-poller text eol=lf
+*.py text eol=lf
+*.md text eol=lf
+*.java text eol=lf
+*.gradle text eol=lf
+*.jar binary

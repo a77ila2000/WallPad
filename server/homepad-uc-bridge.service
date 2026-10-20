@@ -1,0 +1,23 @@
+[Unit]
+Description=HomePad COMMAX UC common-entrance bridge
+After=network-online.target homepad-agent.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/opt/homepad-agent
+Environment=PYTHONUNBUFFERED=1
+Environment=HOMEPAD_UC_BRIDGE_CONFIG=/opt/homepad-agent/uc-bridge.json
+ExecStart=/usr/bin/python3 /opt/homepad-agent/uc_call_bridge.py
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/homepad-agent/state
+
+[Install]
+WantedBy=multi-user.target

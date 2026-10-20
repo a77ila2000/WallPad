@@ -1,0 +1,57 @@
+#!/bin/sh /etc/rc.common
+
+START=95
+STOP=10
+
+LAN_PORT="lan3"
+UPSTREAM_PORT="wan"
+
+wait_for_netdev() {
+	local port="$1"
+	local i=0
+	while [ ! -e "/sys/class/net/$port" ] && [ "$i" -lt 30 ]; do
+		sleep 1
+		i=$((i + 1))
+	done
+	[ -e "/sys/class/net/$port" ]
+}
+
+wait_for_carrier() {
+	local port="$1"
+	local i=0
+	while [ "$i" -lt 30 ]; do
+		[ "$(cat "/sys/class/net/$port/carrier" 2>/dev/null)" = "1" ] && return 0
+		sleep 1
+		i=$((i + 1))
+	done
+	return 1
+}
+
+start() {
+	wait_for_netdev "$LAN_PORT" || {
+		logger -t homenet-phy "$LAN_PORT not found"
+		return 1
+	}
+	wait_for_netdev "$UPSTREAM_PORT" || {
+		logger -t homenet-phy "$UPSTREAM_PORT not found"
+		return 1
+	}
+
+	# Let the upstream home-network link settle before presenting the wallpad.
+	# A router power cycle otherwise leaves the wallpad transmitting without
+	# receiving until its LAN link is renegotiated manually.
+	wait_for_carrier "$UPSTREAM_PORT" || logger -t homenet-phy "$UPSTREAM_PORT carrier wait timed out"
+	sleep 5
+
+	ip link set dev "$LAN_PORT" down
+	sleep 3
+	ethtool -s "$LAN_PORT" speed 100 duplex half autoneg off
+	ip link set dev "$LAN_PORT" up
+	ethtool -s "$LAN_PORT" speed 100 duplex half autoneg off
+	logger -t homenet-phy "$LAN_PORT recovered after $UPSTREAM_PORT carrier; forced 100Mbps/Half"
+}
+
+stop() {
+	ethtool -s "$LAN_PORT" autoneg on 2>/dev/null || true
+	logger -t homenet-phy "$LAN_PORT restored to autoneg on"
+}

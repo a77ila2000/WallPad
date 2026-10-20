@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut android:shortcutId="elevator_home_call"
+        android:enabled="true"
+        android:icon="@drawable/ic_launcher"
+        android:shortcutShortLabel="@string/elevator_call_shortcut_short"
+        android:shortcutLongLabel="@string/elevator_call_shortcut_long">
+        <intent android:action="android.intent.action.VIEW"
+            android:targetPackage="com.homepad.companion.debug"
+            android:targetClass="com.homepad.companion.ElevatorCallShortcutActivity" />
+    </shortcut>
+    <shortcut android:shortcutId="unit_door_open"
+        android:enabled="true"
+        android:icon="@drawable/ic_launcher"
+        android:shortcutShortLabel="@string/unit_door_widget_name"
+        android:shortcutLongLabel="@string/unit_door_widget_name">
+        <intent android:action="android.intent.action.VIEW"
+            android:targetPackage="com.homepad.companion.debug"
+            android:targetClass="com.homepad.companion.UnitDoorShortcutActivity" />
+    </shortcut>
+</shortcuts>

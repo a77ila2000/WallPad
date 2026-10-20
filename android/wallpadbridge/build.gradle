@@ -1,0 +1,57 @@
+plugins {
+    id "com.android.application"
+}
+
+def defaultServer = System.getenv("HOMEPAD_SERVER_URL") ?: ""
+def ingestToken = System.getenv("HOMEPAD_INGEST_TOKEN") ?: ""
+def quoted = { value -> '"' + value.replace('\\', '\\\\').replace('"', '\\"') + '"' }
+
+android {
+    namespace "com.homepad.wallpadbridge"
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.homepad.wallpadbridge"
+        minSdk 17
+        targetSdk 22
+        versionCode 55
+        versionName "0.3.52"
+        testInstrumentationRunner "com.homepad.wallpadbridge.AutoUnlockLatencyProbe"
+        buildConfigField "String", "SERVER_URL", quoted(defaultServer)
+        buildConfigField "String", "INGEST_TOKEN", quoted(ingestToken)
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    // Vendor JNI recovery artifacts are archived separately and must never be
+    // packaged or loaded by the production wallpad bridge.
+    sourceSets {
+        main {
+            jniLibs.srcDirs = []
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+        }
+    }
+
+    lint {
+        // This APK is side-loaded onto the legacy COMMAX wallpad. Raising the
+        // target changes platform behavior and is verified separately.
+        disable "ExpiredTargetSdkVersion"
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation "org.conscrypt:conscrypt-android:2.5.3"
+}

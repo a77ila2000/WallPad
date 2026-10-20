@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f2f2f7">
+  <meta name="description" content="우리집 월패드 상태를 휴대폰에서 확인합니다">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css?v=23">
+  <title>HomePad Companion</title>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">HOMEPAD</p>
+      <h1>우리집</h1>
+    </div>
+    <div id="connection" class="connection pending"><span></span> 연결 확인 중</div>
+  </header>
+
+  <main>
+    <section class="top-status-grid" aria-label="방문 호출과 엘리베이터">
+      <article id="visitor-card" class="feature-card visitor-card compact-status-card">
+        <div class="feature-icon">◎</div>
+        <div class="visitor-detail">
+          <p class="section-kicker">방문 알림</p>
+          <h2 id="visitor-title">호출 대기</h2>
+          <p id="visitor-state" class="secondary">호출 신호 확인 중</p>
+          <button id="visitor-notification" class="visitor-notification" hidden>알림 허용</button>
+        </div>
+      </article>
+      <article class="feature-card elevator-card compact-status-card">
+        <div class="feature-icon">↕</div>
+        <div class="elevator-detail">
+          <p class="section-kicker">엘리베이터</p>
+          <h2 id="elevator-floor">연결 준비 중</h2>
+          <p id="elevator-state" class="secondary">위치 확인 중</p>
+          <button id="elevator-call" class="elevator-call" disabled>우리 층 호출</button>
+          <p id="elevator-call-state" class="secondary">호출 기능 확인 중</p>
+          <div class="elevator-roadmap" aria-label="엘리베이터 기능 상태">
+            <p><span>실시간 위치</span><strong id="elevator-always-on">확인 중</strong></p>
+            <p><span>B2 호출</span><strong id="elevator-b2-call">확인 중</strong></p>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="batch-switch-card" aria-labelledby="batch-switch-title">
+      <div class="batch-switch-icon" aria-hidden="true">⌁</div>
+      <div class="batch-switch-copy">
+        <p class="section-kicker">외출·취침</p>
+        <h2 id="batch-switch-title">일괄소등</h2>
+        <p id="batch-switch-state" class="secondary">전등·환풍기 등 연결 기기 상태 수신 중</p>
+      </div>
+      <label class="switch batch-switch-toggle">
+        <input id="batch-switch-toggle" type="checkbox" aria-label="일괄소등 ON 또는 OFF" disabled>
+        <span class="switch-track"></span>
+      </label>
+    </section>
+
+    <section id="climate-card" class="feature-card climate-card" aria-labelledby="climate-title">
+      <div class="climate-heading">
+        <div>
+          <p class="section-kicker">실내 환경</p>
+          <h2 id="climate-title">난방</h2>
+        </div>
+        <p id="updated" class="updated">수신 대기 중</p>
+      </div>
+      <div class="climate-list">
+        <article class="zone-row master-zone-row" aria-labelledby="master-title">
+          <div class="zone-summary">
+            <h3 id="master-title" class="zone-name">일괄 제어</h3>
+            <p class="zone-temperatures">4개 구역 난방·설정온도</p>
+          </div>
+          <div class="zone-controls master-control-stack">
+            <div class="master-power">
+              <button id="all-off" class="power-button off" disabled>전체 끄기</button>
+              <button id="all-on" class="power-button on" disabled>전체 켜기</button>
+            </div>
+            <div class="master-temperature">
+              <button id="all-temp-down" class="temperature-step" aria-label="전체 설정온도 내리기">−</button>
+              <div id="all-temperature" class="target-temperature master-target">24<sup>°</sup></div>
+              <button id="all-temp-up" class="temperature-step" aria-label="전체 설정온도 올리기">+</button>
+              <button id="apply-all-temperature" class="apply-button" disabled>일괄 적용</button>
+            </div>
+          </div>
+        </article>
+        <div id="zones" class="zone-list" aria-live="polite">
+          <p class="climate-empty">EW11에서 온도 정보를 기다리고 있습니다</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="feature-grid">
+      <article id="lights-card" class="feature-card lights-card">
+        <div class="lights-detail">
+          <div class="lights-heading">
+            <div>
+              <p class="section-kicker">전등</p>
+              <h2>집 안 전등</h2>
+            </div>
+          </div>
+          <div id="lights-list" class="lights-list" aria-live="polite">
+            <p class="secondary">전등 상태를 기다리고 있습니다</p>
+          </div>
+        </div>
+      </article>
+      <article id="cctv-card" class="feature-card cctv-card">
+        <div class="cctv-heading">
+          <div>
+            <p class="section-kicker">CCTV</p>
+            <h2>실시간 영상</h2>
+          </div>
+          <button id="cctv-stop" class="cctv-stop" hidden>영상 닫기</button>
+        </div>
+        <p id="cctv-state" class="secondary">공식 앱 영상 경로를 확인 중입니다</p>
+        <div id="cctv-channels" class="cctv-channels" aria-label="CCTV 채널"></div>
+        <div id="cctv-preview-wrap" class="cctv-preview-wrap" hidden>
+          <img id="cctv-preview" class="cctv-preview" alt="선택한 CCTV 화면">
+          <div id="cctv-loading" class="cctv-loading">영상 연결 중</div>
+        </div>
+      </article>
+    </section>
+
+    <aside id="notice" class="notice" hidden></aside>
+  </main>
+
+  <section id="incoming-call" class="incoming-call" role="dialog" aria-modal="true" aria-labelledby="incoming-call-title" hidden>
+    <div class="incoming-call-panel">
+      <div class="incoming-call-pulse" aria-hidden="true">◎</div>
+      <img id="incoming-call-photo" class="incoming-call-photo" alt="방문자 사진" hidden>
+      <p class="incoming-call-kicker">방문 호출</p>
+      <h2 id="incoming-call-title">현관 호출 수신</h2>
+      <p id="incoming-call-location" class="incoming-call-location">위치 확인 중</p>
+      <p id="incoming-call-time" class="incoming-call-time"></p>
+      <p id="incoming-call-status" class="incoming-call-status">월패드 호출 신호를 감지했습니다</p>
+      <div class="incoming-call-actions">
+        <button id="incoming-call-dismiss" class="incoming-call-dismiss">화면 닫기</button>
+        <button id="incoming-call-unlock" class="incoming-call-unlock" disabled>문 열기 준비 중</button>
+      </div>
+      <p id="incoming-call-unlock-reason" class="incoming-call-unlock-reason">문열림 제어 명령을 분석하고 있습니다.</p>
+    </div>
+  </section>
+
+  <nav class="bottom-nav" aria-label="주 메뉴">
+    <button class="active" data-view="home"><span>⌂</span>홈</button>
+    <button data-view="heating"><span>♨</span>난방</button>
+    <button data-view="lights"><span>✦</span>전등</button>
+    <button data-view="elevator"><span>↕</span>엘리베이터</button>
+    <button data-view="visitors"><span>◎</span>방문</button>
+  </nav>
+  <script src="/app.js?v=27" defer></script>
+</body>
+</html>

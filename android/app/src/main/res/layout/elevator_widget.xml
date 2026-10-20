@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="10dp"
+    android:paddingTop="8dp"
+    android:paddingEnd="8dp"
+    android:paddingBottom="8dp">
+
+    <LinearLayout
+        android:id="@+id/widget_status"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:contentDescription="엘리베이터 위치"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans"
+                android:text="엘리베이터"
+                android:textColor="#AEAEB2"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/widget_floor"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans"
+                android:includeFontPadding="false"
+                android:text="—"
+                android:textColor="#F2F2F7"
+                android:textSize="28sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/widget_direction"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:fontFamily="sans"
+            android:gravity="center_vertical"
+            android:maxLines="1"
+            android:text="위치 대기 중"
+            android:textColor="#AEAEB2"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/widget_call"
+        android:layout_width="88dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="6dp"
+        android:background="@drawable/widget_call_background_disabled"
+        android:contentDescription="엘리베이터를 우리 층으로 호출"
+        android:fontFamily="sans"
+        android:gravity="center"
+        android:maxLines="1"
+        android:text="우리층 호출"
+        android:textColor="#8E8E93"
+        android:textSize="13sp"
+        android:textStyle="bold" />
+</LinearLayout>

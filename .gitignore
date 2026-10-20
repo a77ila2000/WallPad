@@ -1,0 +1,24 @@
+# Never commit live configuration, keys, sessions, captures, or recordings.
+**/local.properties
+**/.gradle/
+**/build/
+**/__pycache__/
+**/*.pyc
+**/state/
+**/captures/
+**/recordings/
+**/*.apk
+**/*.pcap
+**/*.pcapng
+**/*.key
+**/*.pem
+**/*secret*
+**/*token*
+**/*session*.json
+**/config.json
+**/config-server.json
+**/elevator.env
+**/*-request.bin
+!server/config.example.json
+!router/elevator.env.example
+!android/wallpadbridge/src/main/res/raw/isrgrootx1.pem

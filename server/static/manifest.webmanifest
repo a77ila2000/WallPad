@@ -1,0 +1,14 @@
+{
+  "name": "HomePad Companion",
+  "short_name": "HomePad",
+  "description": "우리집 월패드 상태와 제어",
+  "lang": "ko",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f2f2f7",
+  "theme_color": "#f2f2f7",
+  "icons": [
+    {"src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable"}
+  ]
+}

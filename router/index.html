@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#111827">
+  <title>우리집 엘리베이터</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif;color:#f8fafc;background:#0b1020}
+    *{box-sizing:border-box} body{margin:0;min-height:100vh;display:grid;place-items:center;padding:22px;background:radial-gradient(circle at top,#253052 0,#0b1020 52%)}
+    main{width:min(100%,430px)} h1{font-size:20px;margin:0 0 16px;color:#cbd5e1;font-weight:650}
+    .card{background:rgba(17,24,39,.92);border:1px solid #334155;border-radius:28px;padding:28px;box-shadow:0 22px 70px #0008;text-align:center}
+    .label{font-size:14px;color:#94a3b8}.floor{font-size:112px;line-height:1;font-weight:800;letter-spacing:-6px;margin:14px 0 2px;font-variant-numeric:tabular-nums}
+    .motion{font-size:26px;font-weight:700;color:#38bdf8;min-height:39px}.state{margin-top:24px;padding-top:20px;border-top:1px solid #334155;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .pill{border-radius:14px;padding:13px 8px;background:#1e293b;color:#94a3b8;font-size:14px}.pill.on{background:#14532d;color:#bbf7d0}
+    .fresh{margin:18px 0 0;color:#94a3b8;font-size:13px}.fresh.stale{color:#fbbf24}.fresh.off{color:#f87171}
+    .note{color:#64748b;font-size:12px;line-height:1.55;margin:14px 6px 0;text-align:left}
+  </style>
+</head>
+<body>
+  <main>
+    <h1>우리집 엘리베이터</h1>
+    <section class="card">
+      <div class="label">현재 위치</div>
+      <div id="floor" class="floor">—</div>
+      <div id="motion" class="motion">수신 대기</div>
+      <div class="state">
+        <div id="up" class="pill">상행 호출</div>
+        <div id="down" class="pill">하행 호출</div>
+      </div>
+      <p id="fresh" class="fresh off">월패드 위치 화면을 열면 표시됩니다</p>
+    </section>
+    <p class="note">R6850이 홈넷선을 통과하는 월패드 응답만 읽습니다. 마지막 응답 뒤 5초가 지나면 실시간 표시가 종료됩니다.</p>
+  </main>
+  <script>
+    const floor=document.querySelector('#floor'), motion=document.querySelector('#motion'), fresh=document.querySelector('#fresh');
+    const up=document.querySelector('#up'), down=document.querySelector('#down');
+    function ageText(seconds){if(seconds<2)return '방금 갱신';if(seconds<60)return `${seconds}초 전 갱신`;return `${Math.floor(seconds/60)}분 전 갱신`}
+    async function refresh(){
+      try{
+        const r=await fetch(`status.json?t=${Date.now()}`,{cache:'no-store'}); if(!r.ok)throw new Error();
+        const s=await r.json(); if(!s.available)throw new Error();
+        const age=Math.max(0,Math.floor(Date.now()/1000-s.updatedEpoch));
+        floor.textContent=s.displayFloor; motion.textContent=`${s.directionSymbol} ${s.directionText}`;
+        up.classList.toggle('on',s.callUp===1); down.classList.toggle('on',s.callDown===1);
+        fresh.textContent=age<=5?`실시간 · ${ageText(age)}`:`대기 · ${ageText(age)}`;
+        fresh.className=`fresh ${age<=5?'':'stale'}`;
+      }catch{
+        floor.textContent='—'; motion.textContent='수신 대기'; up.classList.remove('on'); down.classList.remove('on');
+        fresh.textContent='월패드 위치 화면을 열면 표시됩니다'; fresh.className='fresh off';
+      }
+    }
+    refresh(); setInterval(refresh,1000);
+  </script>
+</body>
+</html>

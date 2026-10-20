@@ -20,4 +20,3 @@
 Android SDK 35, JDK 17, Gradle 8.9가 필요합니다. `android/`에서 `gradlew.bat :app:assembleDebug :wallpadbridge:assembleDebug`를 실행합니다. 서버 주소·인증 토큰·주차 연락처 등은 로컬 환경변수로 주입합니다. 공개 소스의 초기값은 비워 두었습니다. [복구 절차](docs/RESTORE.md)에 변수 목록이 있습니다.
 
 서버는 Python 3 표준 라이브러리를 중심으로 실행합니다. `server/config.example.json`의 `REPLACE_LOCALLY` 값을 개인 백업과 현재 장비 설정에 맞춰 채운 `config-server.json`을 서버에만 저장하고 `python3 home_agent.py --config config-server.json`으로 시작합니다. 공식 앱 계정과 세션은 공개 저장소에 저장하지 않습니다.
-

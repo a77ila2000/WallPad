@@ -1,0 +1,17 @@
+[Unit]
+Description=HomePad EW11 and elevator agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/opt/homepad-agent
+ExecStart=/usr/bin/python3 /opt/homepad-agent/home_agent.py --config /opt/homepad-agent/config-server.json --frame-log /opt/homepad-agent/state/frames.jsonl
+Restart=always
+RestartSec=2
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
