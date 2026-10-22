@@ -20,7 +20,7 @@
 
 ## 3. 월패드와 휴대폰
 
-1. [월패드 구성](WALLPAD.md)의 순서로 USB ADB에서 장치 모델·기본 홈 화면·COMMAX 기능을 확인한 뒤 `wallpadbridge` APK를 설치합니다. 벨소리와 자동 개방은 기존 설정을 먼저 읽고 복원합니다.
+1. [월패드 구성](WALLPAD.md)의 순서로 USB ADB에서 장치 모델·기본 홈 화면·COMMAX 기능을 확인한 뒤 `wallpadbridge` APK를 설치합니다. 재부팅 후에도 보조 앱이 설치·실행 중인지 확인합니다. 한 현장 점검에서는 재부팅 후 보조 앱이 사라져 재설치가 필요했으며 원인은 아직 확정되지 않았습니다. 벨소리와 자동 개방은 기존 설정을 먼저 읽고 복원합니다.
 2. JDK 17과 Android SDK 35에서 `android/gradlew.bat :app:assembleDebug :wallpadbridge:assembleDebug`로 빌드합니다. 로컬 빌드 환경변수: `HOMEPAD_SERVER_URL`, `HOMEPAD_API_TOKEN`, `HOMEPAD_INGEST_TOKEN`, `HOMEPAD_COMMAX_CLIENT_SECRET`(서버 전용), `HOMEPAD_PARKING_VISITOR_NAME`, `HOMEPAD_PARKING_PHONE`. 카메라 화면을 쓰려면 별도 프로젝트의 `HOMEPAD_CCTV_ORIGIN`도 지정합니다. 빌드 결과 APK는 공개 저장소에 넣지 않습니다.
 3. 휴대폰 앱의 설정에서 서버 URL/API 토큰을 확인하고 알림·마이크·배터리 예외·위젯 권한을 설정합니다. 네이버 웹 로그인 후 실제 주차 조회가 되는지 확인합니다. 측면 버튼/뒤 두드리기는 RegiStar·Tap, Tap·Tasker 등의 **휴대폰 개인 설정**을 별도로 복원합니다.
 4. 기본 홈·전등/난방 조회→승강기 조회→방문사진→양방향 음성→현장 문열기 순서로 검증합니다. 3개 중앙현관과 세대현관은 각각 별도로 확인하고, 자동 개방은 현장 시험을 마친 뒤 켭니다. 야간 음량 예약은 22:00/02:00 자연 경계와 재부팅 후에도 확인합니다.

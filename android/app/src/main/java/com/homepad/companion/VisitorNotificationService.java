@@ -49,6 +49,7 @@ public final class VisitorNotificationService extends Service {
     private static final int ELEVATOR_NOTIFICATION_ID = 1301;
     private static final int HOME_FLOOR = 2;
     private static final long PARKING_DUPLICATE_WINDOW_MS = 5 * 60 * 1000L;
+    private static final long RECENT_VISITOR_SECONDS = 10 * 60L;
 
     private final ExecutorService listener = Executors.newSingleThreadExecutor();
     private final ExecutorService commands = Executors.newSingleThreadExecutor();
@@ -443,14 +444,16 @@ public final class VisitorNotificationService extends Service {
             return;
         }
 
-        // Keep the completed call notification so the visitor photo does not
-        // disappear as soon as COMMAX ends the call.  If the SSE connection
-        // dropped between ring and photo upload, recover a recent unseen photo
-        // once when the service reconnects.
+        // A disconnected listener may have missed the entire ring. Recover a
+        // recent completed call, and keep its notification after COMMAX hangs up.
         String eventId = event.optString("id", "");
         String photoUrl = event.optString("photoUrl", "");
         long received = event.optLong("receivedEpoch", event.optLong("detectedEpoch", 0));
         long age = System.currentTimeMillis() / 1000 - received;
+        if (!eventId.isEmpty() && age >= 0 && age <= RECENT_VISITOR_SECONDS
+                && !eventId.equals(preferences.getString("lastNotifiedVisitorEndedEvent", ""))) {
+            notifyVisitor(event);
+        }
         String lastPhotoId = preferences.getString("lastNotifiedVisitorPhotoEvent", "");
         if (!eventId.isEmpty() && !photoUrl.isEmpty()
                 && age >= 0 && age <= 180 && !eventId.equals(lastPhotoId)) {
@@ -464,19 +467,18 @@ public final class VisitorNotificationService extends Service {
 
     private void notifyVisitor(JSONObject event, boolean forceUpdate) {
         String eventId = event.optString("id", "");
+        if (eventId.isEmpty()) return;
         String callState = event.optString("callState", "ringing");
         boolean activeCall = "ringing".equals(callState) || "connected".equals(callState);
-        if (!activeCall && !forceUpdate) {
-            notifications.cancel(VISITOR_NOTIFICATION_ID);
-            return;
-        }
         String lastId = preferences.getString("lastNotifiedVisitorEvent", "");
         String lastPhotoId = preferences.getString("lastNotifiedVisitorPhotoEvent", "");
-        if (!forceUpdate && !eventId.isEmpty() && eventId.equals(lastId)) return;
-        if (forceUpdate && !eventId.isEmpty() && eventId.equals(lastPhotoId)) return;
+        if (!forceUpdate && eventId.equals(preferences.getString(
+                activeCall ? "lastNotifiedVisitorEvent" : "lastNotifiedVisitorEndedEvent", ""))) return;
+        if (forceUpdate && eventId.equals(lastPhotoId)) return;
 
         boolean central = "central_entrance".equals(event.optString("kind"));
         String title = central ? "공동현관 방문 호출" : "세대 현관 방문 호출";
+        if (!activeCall) title = central ? "공동현관 방문 기록" : "세대 현관 방문 기록";
         if ("confirmed".equals(event.optString("autoUnlockStatus"))) title = "중앙현관 자동 문 열림";
         String fallback = central ? "공동현관" : "세대 현관";
         String location = event.optString("location", fallback);
@@ -513,7 +515,7 @@ public final class VisitorNotificationService extends Service {
                 .setLocalOnly(false)
                 .setAutoCancel(true)
                 .setContentIntent(pending)
-                .setOnlyAlertOnce(forceUpdate);
+                .setOnlyAlertOnce(forceUpdate || (!activeCall && eventId.equals(lastId)));
         if (activeCall) {
             builder.addAction(com.homepad.companion.R.drawable.ic_notification, "월패드 수락", answerPending)
                     .addAction(com.homepad.companion.R.drawable.ic_notification, "문 열기", unlockPending);
@@ -535,6 +537,7 @@ public final class VisitorNotificationService extends Service {
         if (!eventId.isEmpty()) {
             android.content.SharedPreferences.Editor editor = preferences.edit()
                     .putString("lastNotifiedVisitorEvent", eventId);
+            if (!activeCall) editor.putString("lastNotifiedVisitorEndedEvent", eventId);
             if (forceUpdate && !event.optString("photoUrl", "").isEmpty()) {
                 editor.putString("lastNotifiedVisitorPhotoEvent", eventId);
             }
