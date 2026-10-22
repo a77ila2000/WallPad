@@ -342,7 +342,7 @@ class StateStore:
         self.elevator_last_change = time.monotonic()
         self.elevator_direction = 0
         self.state: dict[str, Any] = {
-            "service": {"startedAt": self.started_at, "version": "0.14.31"},
+            "service": {"startedAt": self.started_at, "version": "0.14.32"},
             "integration": {
                 "policy": self.integration_config.get("policy", "official_first"),
                 "priority": self.integration_config.get(
@@ -1057,7 +1057,7 @@ class StateStore:
             pass
 
     def _persist_visitor_history_locked(self) -> None:
-        self._prune_visitor_history_locked()
+        self._prune_visitor_history_locked(prune_photos=False)
         self._write_visitor_history_locked()
 
     def _write_visitor_history_locked(self) -> None:
@@ -1094,7 +1094,9 @@ class StateStore:
                 continue
         return None
 
-    def _prune_visitor_history_locked(self, now_epoch: int | None = None) -> bool:
+    def _prune_visitor_history_locked(
+        self, now_epoch: int | None = None, prune_photos: bool = True
+    ) -> bool:
         """Remove visitor metadata and photos older than the configured retention."""
         retention_days = max(1, int(self.visitor_config.get("retentionDays", 90)))
         cutoff = int(now_epoch if now_epoch is not None else time.time()) - retention_days * 86400
@@ -1113,7 +1115,7 @@ class StateStore:
                 self.state["visitors"]["lastEvent"] = kept[0] if kept else None
 
         photo_dir_text = self.visitor_config.get("photoDir")
-        if photo_dir_text:
+        if prune_photos and photo_dir_text:
             photo_dir = Path(photo_dir_text)
             if photo_dir.is_dir():
                 for photo in photo_dir.glob("*.jpg"):
@@ -1369,10 +1371,6 @@ class StateStore:
 
     def snapshot(self) -> dict[str, Any]:
         with self.lock:
-            if self._prune_visitor_history_locked():
-                self._write_visitor_history_locked()
-                self._snapshot_cache_sequence = -1
-                self._snapshot_cache_json = ""
             if self._snapshot_cache_sequence != self.sequence:
                 self._snapshot_cache_json = json.dumps(self.state, ensure_ascii=False)
                 self._snapshot_cache_sequence = self.sequence
@@ -1391,6 +1389,14 @@ class StateStore:
             snapshot["sequence"] = self.sequence
             snapshot["serverTime"] = iso_now()
             return snapshot
+
+    def prune_visitor_history(self) -> None:
+        """Run retention maintenance outside the status request path."""
+        with self.lock:
+            if self._prune_visitor_history_locked():
+                self._write_visitor_history_locked()
+                self._snapshot_cache_sequence = -1
+                self._snapshot_cache_json = ""
 
     def wait_for_change(self, after: int, timeout: float = 20.0) -> dict[str, Any] | None:
         deadline = time.monotonic() + timeout
@@ -4258,6 +4264,16 @@ def main() -> int:
     )
     elevator_poller.start()
     elevator_receipt_poller.start()
+    visitor_pruner_stop = threading.Event()
+
+    def prune_visitors_periodically() -> None:
+        while not visitor_pruner_stop.wait(86400):
+            store.prune_visitor_history()
+
+    visitor_pruner = threading.Thread(
+        target=prune_visitors_periodically, name="visitor-history-pruner", daemon=True
+    )
+    visitor_pruner.start()
     print(f"HomePad Companion: http://{host}:{port}")
     print(f"EW11: {config['ew11']['host']}:{config['ew11']['port']}")
     if args.frame_log:
@@ -4270,6 +4286,7 @@ def main() -> int:
     except KeyboardInterrupt:
         pass
     finally:
+        visitor_pruner_stop.set()
         client.stop_event.set()
         official_state_poller.stop_event.set()
         apti_parking_poller.stop_event.set()

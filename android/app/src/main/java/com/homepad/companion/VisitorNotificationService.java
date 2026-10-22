@@ -188,6 +188,7 @@ public final class VisitorNotificationService extends Service {
                 ApiClient api = new ApiClient(server, token);
                 JSONObject status = api.getJson("/api/status");
                 long sequence = status.optLong("sequence", 0);
+                long lastHeartbeatReconcile = android.os.SystemClock.elapsedRealtime();
                 notifyCurrentCall(status);
                 updateElevator(status);
                 publishStatus(status, "initial");
@@ -229,11 +230,15 @@ public final class VisitorNotificationService extends Service {
                             || "control.command".equals(type)) {
                         publishInvalidation(type);
                     } else if ("heartbeat".equals(type)) {
-                        JSONObject refreshed = api.getJson("/api/status");
-                        eventSequence = refreshed.optLong("sequence", 0);
-                        notifyCurrentCall(refreshed);
-                        updateElevator(refreshed);
-                        publishStatus(refreshed, type);
+                        long now = android.os.SystemClock.elapsedRealtime();
+                        if (now - lastHeartbeatReconcile >= 300000L) {
+                            JSONObject refreshed = api.getJson("/api/status");
+                            eventSequence = refreshed.optLong("sequence", 0);
+                            notifyCurrentCall(refreshed);
+                            updateElevator(refreshed);
+                            publishStatus(refreshed, type);
+                            lastHeartbeatReconcile = now;
+                        }
                     }
                     sequence = eventSequence;
                 }
